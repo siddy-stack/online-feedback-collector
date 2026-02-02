@@ -1,0 +1,165 @@
+from flask import Flask, render_template, request, redirect, url_for, session,jsonify
+import sqlite3
+import logging
+logging.basicConfig(level=logging.INFO)
+
+app = Flask(__name__)
+app.secret_key = "supersecretkey"  # required for sessions
+
+DATABASE = "database.db"
+
+# -----------------------------
+# Admin credentials (simple)
+# -----------------------------
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+
+# -----------------------------
+# Database helper
+# -----------------------------
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+# -----------------------------
+# Home Page – Feedback Form
+# -----------------------------
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+# -----------------------------
+# Submit Feedback
+# -----------------------------
+@app.route("/submit-feedback", methods=["POST"])
+def submit_feedback():
+    name = request.form.get("name")
+    email = request.form.get("email")
+    rating = request.form.get("rating")
+    comments = request.form.get("comments")
+
+    conn = get_db_connection()
+    conn.execute(
+        "INSERT INTO feedback (name, email, rating, comments) VALUES (?, ?, ?, ?)",
+        (name, email, rating, comments),
+    )
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("index"))
+
+
+# -----------------------------
+# Admin Login
+# -----------------------------
+@app.route("/admin-login", methods=["GET", "POST"])
+def admin_login():
+    error = None
+
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["admin_logged_in"] = True
+            return redirect(url_for("admin_dashboard"))
+        else:
+            error = "Invalid username or password"
+
+    return render_template("admin_login.html", error=error)
+
+
+# -----------------------------
+# Admin Dashboard (Protected)
+# -----------------------------
+@app.route("/admin-dashboard")
+def admin_dashboard():
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+
+    feedbacks = conn.execute(
+        "SELECT * FROM feedback ORDER BY date_submitted DESC"
+    ).fetchall()
+
+    total_feedback = conn.execute(
+        "SELECT COUNT(*) FROM feedback"
+    ).fetchone()[0]
+
+    avg_rating = conn.execute(
+        "SELECT AVG(rating) FROM feedback"
+    ).fetchone()[0]
+
+    conn.close()
+
+    return render_template(
+        "admin.html",
+        feedbacks=feedbacks,
+        total_feedback=total_feedback,
+        avg_rating=round(avg_rating, 2) if avg_rating else 0,
+    )
+
+
+# -----------------------------
+# Logout
+# -----------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+@app.route("/api/feedback", methods=["POST"])
+def api_submit_feedback():
+    data = request.get_json()
+
+    # Basic validation
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+
+    name = data.get("name")
+    email = data.get("email")
+    rating = data.get("rating")
+    comments = data.get("comments", "")
+
+    if not all([name, email, rating]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    conn = get_db_connection()
+    conn.execute(
+        """
+        INSERT INTO feedback (name, email, rating, comments)
+        VALUES (?, ?, ?, ?)
+        """,
+        (name, email, rating, comments),
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Feedback logged successfully"
+    }), 201
+
+
+@app.route("/api/feedback", methods=["GET"])
+def api_get_feedback():
+    conn = get_db_connection()
+    feedbacks = conn.execute(
+        "SELECT * FROM feedback ORDER BY date_submitted DESC"
+    ).fetchall()
+    conn.close()
+
+    return jsonify([
+        dict(feedback) for feedback in feedbacks
+    ])
+
+
+# -----------------------------
+# Run App
+# -----------------------------
+if __name__ == "__main__":
+    app.run(debug=True)

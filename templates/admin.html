@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<p>Average Rating: {{ avg_rating }}</p>
+
+<table border="1">
+<tr>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Rating</th>
+    <th>Comments</th>
+</tr>
+
+{% for f in feedbacks %}
+<tr>
+    <td>{{ f[1] }}</td>
+    <td>{{ f[2] }}</td>
+    <td>{{ f[3] }}</td>
+    <td>{{ f[4] }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}
