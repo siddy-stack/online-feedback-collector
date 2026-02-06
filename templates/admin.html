@@ -1,25 +1,99 @@
 {% extends "layout.html" %}
 
 {% block content %}
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <h2>Admin Dashboard</h2>
 
-<p>Average Rating: {{ avg_rating }}</p>
+<!-- Top Actions -->
+<div style="margin-bottom: 15px;">
+    <a href="{{ url_for('export_csv') }}">
+        <button>⬇ Download CSV</button>
+    </a>
 
-<table border="1">
-<tr>
-    <th>Name</th>
-    <th>Email</th>
-    <th>Rating</th>
-    <th>Comments</th>
-</tr>
+    <a href="{{ url_for('logout') }}" style="margin-left: 10px;">
+        <button>Logout</button>
+    </a>
+</div>
 
-{% for f in feedbacks %}
-<tr>
-    <td>{{ f[1] }}</td>
-    <td>{{ f[2] }}</td>
-    <td>{{ f[3] }}</td>
-    <td>{{ f[4] }}</td>
-</tr>
-{% endfor %}
+<hr>
+
+<!-- Summary -->
+<p><strong>Total Feedback:</strong> {{ total_feedback }}</p>
+<p><strong>Average Rating:</strong> {{ avg_rating }}</p>
+
+<hr>
+
+<!-- Chart -->
+<h3>Feedback Rating Distribution</h3>
+
+<canvas
+    id="ratingChart"
+    data-ratings='{{ ratings | tojson }}'
+    data-counts='{{ counts | tojson }}'
+    width="400"
+    height="200">
+</canvas>
+
+<hr>
+
+<!-- Feedback Table -->
+<h3>All Feedback</h3>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Rating</th>
+        <th>Comments</th>
+        <th>Date</th>
+    </tr>
+
+    {% for f in feedbacks %}
+    <tr>
+        <td>{{ f["name"] }}</td>
+        <td>{{ f["email"] }}</td>
+        <td>{{ f["rating"] }}</td>
+        <td>{{ f["comments"] }}</td>
+        <td>{{ f["date_submitted"] }}</td>
+    </tr>
+    {% endfor %}
 </table>
+
+<!-- Chart Script (Jinja-safe, VS Code-safe) -->
+<script>
+(function () {
+    const canvas = document.getElementById("ratingChart");
+    if (!canvas) return;
+
+    const chartRatings = JSON.parse(canvas.dataset.ratings);
+    const chartCounts = JSON.parse(canvas.dataset.counts);
+
+    const ctx = canvas.getContext("2d");
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: chartRatings,
+            datasets: [{
+                label: "Number of Feedbacks",
+                data: chartCounts,
+                backgroundColor: "rgba(54, 162, 235, 0.6)"
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+})();
+</script>
+
 {% endblock %}

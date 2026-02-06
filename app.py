@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, session,jsonify
+import csv
+from flask import Flask, render_template, request, redirect, url_for, session,jsonify,Response
 import sqlite3
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -95,13 +96,29 @@ def admin_dashboard():
         "SELECT AVG(rating) FROM feedback"
     ).fetchone()[0]
 
+    # Rating distribution for chart
+    rating_counts = conn.execute(
+        """
+        SELECT rating, COUNT(*) as count
+        FROM feedback
+        GROUP BY rating
+        ORDER BY rating
+        """
+    ).fetchall()
+
     conn.close()
+
+    # Prepare data for Chart.js
+    ratings = [row["rating"] for row in rating_counts]
+    counts = [row["count"] for row in rating_counts]
 
     return render_template(
         "admin.html",
         feedbacks=feedbacks,
         total_feedback=total_feedback,
         avg_rating=round(avg_rating, 2) if avg_rating else 0,
+        ratings=ratings,
+        counts=counts
     )
 
 
@@ -156,6 +173,30 @@ def api_get_feedback():
     return jsonify([
         dict(feedback) for feedback in feedbacks
     ])
+
+@app.route("/export-csv")
+def export_csv():
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+    feedbacks = conn.execute(
+        "SELECT * FROM feedback ORDER BY date_submitted DESC"
+    ).fetchall()
+    conn.close()
+
+    def generate():
+        yield "ID,Name,Email,Rating,Comments,Date Submitted\n"
+        for f in feedbacks:
+            yield f'{f["id"]},{f["name"]},{f["email"]},{f["rating"]},"{f["comments"]}",{f["date_submitted"]}\n'
+
+    return Response(
+        generate(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=feedback_data.csv"
+        }
+    )
 
 
 # -----------------------------

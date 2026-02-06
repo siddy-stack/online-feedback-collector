@@ -1,6 +1,6 @@
 console.log("JS loaded successfully");
 
-// Optional form validation
+// Optional form validation (for feedback form page)
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector("form");
 
