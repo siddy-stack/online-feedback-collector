@@ -1,23 +1,32 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2>Submit Feedback</h2>
+<div class="container">
+    <div class="card">
+        <h2>Submit Feedback</h2>
 
-<form method="POST" action="/submit-feedback">
-    <input type="text" name="name" placeholder="Name" required><br>
-    <input type="email" name="email" placeholder="Email" required><br>
+        {% if success %}
+            <p class="success">Thank you for your feedback!</p>
+        {% endif %}
 
-    <select name="rating" required>
-        <option value="">Rating</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-    </select><br>
+        <form method="POST" action="/submit-feedback" id="feedbackForm">
+            <input type="text" name="name" placeholder="Name" required>
 
-    <textarea name="comments" placeholder="Comments"></textarea><br>
+            <input type="email" name="email" placeholder="Email" required>
 
-    <button type="submit">Submit</button>
-</form>
+            <select name="rating" required>
+                <option value="">Select Rating</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+
+            <textarea name="comments" placeholder="Comments (min 10 chars)" rows="4"></textarea>
+
+            <button type="submit">Submit Feedback</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

@@ -30,7 +30,8 @@ def get_db_connection():
 # -----------------------------
 @app.route("/")
 def index():
-    return render_template("index.html")
+    success = request.args.get("success")
+    return render_template("index.html", success=success)
 
 
 # -----------------------------
@@ -51,7 +52,7 @@ def submit_feedback():
     conn.commit()
     conn.close()
 
-    return redirect(url_for("index"))
+    return redirect(url_for("index", success=1))
 
 
 # -----------------------------
