@@ -50,10 +50,123 @@ button {
     transition: background-color 0.3s ease;
 }
 
+.dashboard-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.stats-card {
+    flex: 1;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+.chart-card {
+    flex: 2;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+.chart-card canvas {
+    max-height: 260px;
+}
+
 /* Button hover effect */
 button:hover {
     background-color: #0056b3;
 }
+
+#ratingPieChart {
+    max-height: 220px;
+    margin-top: 10px;
+}
+
+/* Top right action icons */
+.top-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+/* Icon button style */
+.icon-btn {
+    text-decoration: none;
+    font-size: 18px;          /* makes icons small */
+    padding: 6px 10px;
+    border-radius: 6px;
+    background-color: #f1f3f5;
+    color: #333;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+/* Hover effect */
+.icon-btn:hover {
+    background-color: #007bff;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #4e73df, #1cc88a);
+}
+
+.login-card {
+    background: #ffffff;
+    padding: 35px;
+    width: 350px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.login-card h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.login-card button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4e73df;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.login-card button:hover {
+    background-color: #2e59d9;
+    transform: scale(1.02);
+}
+
+.error {
+    color: red;
+    margin-bottom: 15px;
+}
+
 
 /* Success message */
 .success {

@@ -8,36 +8,49 @@
 <h2>Admin Dashboard</h2>
 
 <!-- Top Actions -->
-<div style="margin-bottom: 15px;">
-    <a href="{{ url_for('export_csv') }}">
-        <button>⬇ Download CSV</button>
+<div class="top-actions">
+    <a href="{{ url_for('export_csv') }}" title="Download CSV" class="icon-btn">
+        ⬇
     </a>
 
-    <a href="{{ url_for('logout') }}" style="margin-left: 10px;">
-        <button>Logout</button>
+    <a href="{{ url_for('logout') }}" title="Logout" class="icon-btn">
+        ⎋
     </a>
 </div>
 
-<hr>
-
-<!-- Summary -->
-<p><strong>Total Feedback:</strong> {{ total_feedback }}</p>
-<p><strong>Average Rating:</strong> {{ avg_rating }}</p>
 
 <hr>
+<!-- Dashboard Row -->
+<div class="dashboard-row">
 
-<!-- Chart -->
-<h3>Feedback Rating Distribution</h3>
+    <!-- Stats Card -->
+    <div class="stats-card">
+        <p><strong>Total Feedback:</strong> {{ total_feedback }}</p>
+        <p><strong>Average Rating:</strong> {{ avg_rating }}</p>
+    </div>
 
-<canvas
-    id="ratingChart"
-    data-ratings='{{ ratings | tojson }}'
-    data-counts='{{ counts | tojson }}'
-    width="400"
-    height="200">
-</canvas>
+    <!-- Chart Card -->
+<div class="chart-card">
+    <h3>Feedback Rating Distribution (Bar)</h3>
 
-<hr>
+    <canvas
+        id="ratingChart"
+        data-ratings='{{ ratings | tojson }}'
+        data-counts='{{ counts | tojson }}'>
+    </canvas>
+
+    <hr>
+
+    <h3>Rating Share (Pie)</h3>
+
+    <canvas
+        id="ratingPieChart"
+        data-ratings='{{ ratings | tojson }}'
+        data-counts='{{ counts | tojson }}'>
+    </canvas>
+</div>
+
+
 
 <!-- Feedback Table -->
 <h3>All Feedback</h3>
@@ -65,26 +78,29 @@
 <!-- Chart Script (Jinja-safe, VS Code-safe) -->
 <script>
 (function () {
-    const canvas = document.getElementById("ratingChart");
-    if (!canvas) return;
 
-    const chartRatings = JSON.parse(canvas.dataset.ratings);
-    const chartCounts = JSON.parse(canvas.dataset.counts);
+    /* ---------- BAR CHART ---------- */
+    const barCanvas = document.getElementById("ratingChart");
+    if (!barCanvas) return;
 
-    const ctx = canvas.getContext("2d");
+    const ratings = JSON.parse(barCanvas.dataset.ratings);
+    const counts = JSON.parse(barCanvas.dataset.counts);
 
-    new Chart(ctx, {
+    const barCtx = barCanvas.getContext("2d");
+
+    new Chart(barCtx, {
         type: "bar",
         data: {
-            labels: chartRatings,
+            labels: ratings,
             datasets: [{
                 label: "Number of Feedbacks",
-                data: chartCounts,
+                data: counts,
                 backgroundColor: "rgba(54, 162, 235, 0.6)"
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
                     beginAtZero: true,
@@ -93,7 +109,35 @@
             }
         }
     });
+
+    /* ---------- PIE CHART ---------- */
+    const pieCanvas = document.getElementById("ratingPieChart");
+    if (!pieCanvas) return;
+
+    const pieCtx = pieCanvas.getContext("2d");
+
+    new Chart(pieCtx, {
+        type: "pie",
+        data: {
+            labels: ratings,
+            datasets: [{
+                data: counts,
+                backgroundColor: [
+                    "#ff6384",
+                    "#36a2eb",
+                    "#ffcd56",
+                    "#4bc0c0",
+                    "#9966ff"
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
 })();
 </script>
+
 
 {% endblock %}
