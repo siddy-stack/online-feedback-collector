@@ -46,6 +46,73 @@
 
 </div>
 
+<!-- Pagination -->
+<div class="pagination">
+
+    {% if page > 1 %}
+    <a href="{{ url_for(
+        'admin_dashboard',
+        page=page-1,
+        search=search,
+        rating=rating_filter,
+        sort=sort
+    ) }}">
+        ⬅ Previous
+    </a>
+    {% endif %}
+
+    <span> Page {{ page }} of {{ total_pages }} </span>
+
+    {% if page < total_pages %}
+    <a href="{{ url_for(
+        'admin_dashboard',
+        page=page+1,
+        search=search,
+        rating=rating_filter,
+        sort=sort
+    ) }}">
+        Next ➡
+    </a>
+    {% endif %}
+
+</div>
+
+<!---Filter HTML-->
+<form method="get" class="filter-form compact">
+
+    <input
+        type="text"
+        name="search"
+        placeholder="Search name, email, comments"
+        value="{{ search }}">
+
+    <select name="rating">
+        <option value="">All Ratings</option>
+        {% for i in range(1, 6) %}
+        <option value="{{ i }}"
+            {% if rating_filter == i|string %}selected{% endif %}>
+            {{ i }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <select name="sort">
+        <option value="date_desc" {% if sort == "date_desc" %}selected{% endif %}>
+            Newest First
+        </option>
+        <option value="date_asc" {% if sort == "date_asc" %}selected{% endif %}>
+            Oldest First
+        </option>
+        <option value="rating_desc" {% if sort == "rating_desc" %}selected{% endif %}>
+            Highest Rating
+        </option>
+        <option value="rating_asc" {% if sort == "rating_asc" %}selected{% endif %}>
+            Lowest Rating
+        </option>
+    </select>
+
+    <button type="submit" class="btn-apply-small">Apply</button>
+</form>
 
 
 <!-- Feedback Table -->

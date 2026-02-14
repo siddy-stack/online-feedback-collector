@@ -84,22 +84,71 @@ def admin_dashboard():
 
     conn = get_db_connection()
 
-    feedbacks = conn.execute(
-        "SELECT * FROM feedback ORDER BY date_submitted DESC"
-    ).fetchall()
+    # -------- Query Params --------
+    page = request.args.get("page", 1, type=int)
+    search = request.args.get("search", "")
+    rating_filter = request.args.get("rating", "")
+    sort = request.args.get("sort", "date_desc")
 
+    per_page = 5
+    offset = (page - 1) * per_page
+
+    # -------- WHERE conditions --------
+    where_clauses = []
+    params = []
+
+    # Search (name, email, comments)
+    if search:
+        where_clauses.append(
+            "(name LIKE ? OR email LIKE ? OR comments LIKE ?)"
+        )
+        keyword = f"%{search}%"
+        params.extend([keyword, keyword, keyword])
+
+    # Rating filter
+    if rating_filter:
+        where_clauses.append("rating = ?")
+        params.append(rating_filter)
+
+    where_sql = ""
+    if where_clauses:
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
+    # -------- Sorting --------
+    order_by = {
+        "date_desc": "date_submitted DESC",
+        "date_asc": "date_submitted ASC",
+        "rating_desc": "rating DESC",
+        "rating_asc": "rating ASC",
+    }.get(sort, "date_submitted DESC")
+
+    # -------- Count for pagination --------
     total_feedback = conn.execute(
-        "SELECT COUNT(*) FROM feedback"
+        f"SELECT COUNT(*) FROM feedback {where_sql}",
+        params
     ).fetchone()[0]
 
+    total_pages = (total_feedback + per_page - 1) // per_page
+
+    # -------- Fetch data --------
+    feedbacks = conn.execute(
+        f"""
+        SELECT * FROM feedback
+        {where_sql}
+        ORDER BY {order_by}
+        LIMIT ? OFFSET ?
+        """,
+        params + [per_page, offset]
+    ).fetchall()
+
+    # -------- Stats (for dashboard) --------
     avg_rating = conn.execute(
         "SELECT AVG(rating) FROM feedback"
     ).fetchone()[0]
 
-    # Rating distribution for chart
     rating_counts = conn.execute(
         """
-        SELECT rating, COUNT(*) as count
+        SELECT rating, COUNT(*) AS count
         FROM feedback
         GROUP BY rating
         ORDER BY rating
@@ -108,7 +157,6 @@ def admin_dashboard():
 
     conn.close()
 
-    # Prepare data for Chart.js
     ratings = [row["rating"] for row in rating_counts]
     counts = [row["count"] for row in rating_counts]
 
@@ -118,8 +166,15 @@ def admin_dashboard():
         total_feedback=total_feedback,
         avg_rating=round(avg_rating, 2) if avg_rating else 0,
         ratings=ratings,
-        counts=counts
+        counts=counts,
+        page=page,
+        total_pages=total_pages,
+        search=search,
+        rating_filter=rating_filter,
+        sort=sort
     )
+
+
 
 #-----------------------------------
 #Delete Operation
