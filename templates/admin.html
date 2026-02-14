@@ -10,44 +10,40 @@
 <!-- Top Actions -->
 <div class="top-actions">
     <a href="{{ url_for('export_csv') }}" class="icon-btn">⬇ CSV</a>
-        
-    </a>
-
     <a href="{{ url_for('logout') }}" class="icon-btn">⎋ Logout</a>
-        
-    </a>
 </div>
+
 
 
 <hr>
 <!-- Dashboard Row -->
 <div class="dashboard-row">
 
-    <!-- Stats Card -->
     <div class="stats-card">
         <p><strong>Total Feedback:</strong> {{ total_feedback }}</p>
         <p><strong>Average Rating:</strong> {{ avg_rating }}</p>
     </div>
 
-    <!-- Chart Card -->
-<div class="chart-card">
-    <h3>Feedback Rating Distribution (Bar)</h3>
+    <div class="chart-card">
+        <h3>Feedback Rating Distribution (Bar)</h3>
 
-    <canvas
-        id="ratingChart"
-        data-ratings='{{ ratings | tojson }}'
-        data-counts='{{ counts | tojson }}'>
-    </canvas>
+        <canvas
+            id="ratingChart"
+            data-ratings='{{ ratings | tojson }}'
+            data-counts='{{ counts | tojson }}'>
+        </canvas>
 
-    <hr>
+        <hr>
 
-    <h3>Rating Share (Pie)</h3>
+        <h3>Rating Share (Pie)</h3>
 
-    <canvas
-        id="ratingPieChart"
-        data-ratings='{{ ratings | tojson }}'
-        data-counts='{{ counts | tojson }}'>
-    </canvas>
+        <canvas
+            id="ratingPieChart"
+            data-ratings='{{ ratings | tojson }}'
+            data-counts='{{ counts | tojson }}'>
+        </canvas>
+    </div>
+
 </div>
 
 
@@ -62,6 +58,7 @@
         <th>Rating</th>
         <th>Comments</th>
         <th>Date</th>
+        <th>Action</th>
     </tr>
 
     {% for f in feedbacks %}
@@ -71,6 +68,13 @@
         <td>{{ f["rating"] }}</td>
         <td>{{ f["comments"] }}</td>
         <td>{{ f["date_submitted"] }}</td>
+        <td>
+    <a href="{{ url_for('edit_feedback', id=f['id']) }}">✏️</a>
+    &nbsp;
+    <a href="{{ url_for('delete_feedback', id=f['id']) }}"
+       onclick="return confirm('Delete this feedback?')">❌</a>
+</td>
+
     </tr>
     {% endfor %}
 </table>

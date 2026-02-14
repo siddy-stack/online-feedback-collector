@@ -6,7 +6,6 @@ logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # required for sessions
-
 DATABASE = "database.db"
 
 # -----------------------------
@@ -122,6 +121,22 @@ def admin_dashboard():
         counts=counts
     )
 
+#-----------------------------------
+#Delete Operation
+#-----------------------------------
+
+@app.route("/delete-feedback/<int:id>")
+def delete_feedback(id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+    conn.execute("DELETE FROM feedback WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("admin_dashboard"))
+
 
 # -----------------------------
 # Logout
@@ -161,6 +176,44 @@ def api_submit_feedback():
     return jsonify({
         "message": "Feedback logged successfully"
     }), 201
+
+#-------------------------------------------
+#---------Edit Feedback---------------------
+#-------------------------------------------
+
+@app.route("/edit-feedback/<int:id>", methods=["GET", "POST"])
+def edit_feedback(id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    conn = get_db_connection()
+
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        rating = request.form.get("rating")
+        comments = request.form.get("comments")
+
+        conn.execute(
+            """
+            UPDATE feedback
+            SET name = ?, email = ?, rating = ?, comments = ?
+            WHERE id = ?
+            """,
+            (name, email, rating, comments, id),
+        )
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("admin_dashboard"))
+
+    # GET request → load existing data
+    feedback = conn.execute(
+        "SELECT * FROM feedback WHERE id = ?", (id,)
+    ).fetchone()
+    conn.close()
+
+    return render_template("edit_feedback.html", feedback=feedback)
 
 
 @app.route("/api/feedback", methods=["GET"])
